@@ -64,7 +64,7 @@ This project implements a smart parking mechanism using RFID technology, NodeMCU
 
 ## Demonstration
 
-![Demo UI](misc/demoUI.jpg)
+![Demo UI](misc/demoUI.png)
 
 ## Images for Reference
 
