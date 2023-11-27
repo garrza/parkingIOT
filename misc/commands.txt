@@ -1,0 +1,16 @@
+MySQL - Docker
+docker exec -it containeriot bash
+mysql -u root -p
+Hostname: 127.0.0.1
+Port: 3306
+U: root
+P: davalos
+
+Node-RED - Docker
+(Node-RED: node-red)
+
+MQTT - HiveMQ:
+(Default on site)
+Topic: authorized-uid
+
+
