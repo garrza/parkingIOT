@@ -1,0 +1,266 @@
+[
+    {
+        "id": "301632ec8418a0cc",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "f1c76e02.e67bf",
+        "type": "mysql",
+        "z": "301632ec8418a0cc",
+        "mydb": "610a1db65fbea409",
+        "name": "",
+        "x": 310,
+        "y": 280,
+        "wires": [
+            [
+                "fa865e6f44116cfd",
+                "6804820a.2a019c"
+            ]
+        ]
+    },
+    {
+        "id": "1939fc099d4c6a51",
+        "type": "debug",
+        "z": "301632ec8418a0cc",
+        "name": "Show info",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "topic",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 270,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "8cc54f530d43fd64",
+        "type": "mqtt in",
+        "z": "301632ec8418a0cc",
+        "name": "",
+        "topic": "authorized-uid",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c231287c7e8da1f7",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 280,
+        "wires": [
+            [
+                "baedc350.d73498"
+            ]
+        ]
+    },
+    {
+        "id": "6911d1d0d516c06e",
+        "type": "debug",
+        "z": "301632ec8418a0cc",
+        "name": "Show response",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "topic",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 630,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "baedc350.d73498",
+        "type": "function",
+        "z": "301632ec8418a0cc",
+        "name": "UID Processing",
+        "func": "// Extract the UID from the incoming message\nvar incomingMessage = msg.payload;\nvar uid = incomingMessage.replace(/\\s/g, ''); // Remove whitespaces\n\n// Create a query to check if the student is currently parked\nvar queryCheckParked = \"SELECT student_id FROM CurrentlyParked WHERE student_id = '\" + uid + \"'\";\n\n// Set the SQL queries as an array in msg.payload\nmsg.topic = queryCheckParked;\nmsg.uid = uid;\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 160,
+        "y": 360,
+        "wires": [
+            [
+                "1939fc099d4c6a51",
+                "f1c76e02.e67bf"
+            ]
+        ]
+    },
+    {
+        "id": "6804820a.2a019c",
+        "type": "function",
+        "z": "301632ec8418a0cc",
+        "name": "Decision Making",
+        "func": "// Assuming msg.payload is the result of the previous query\nvar queryResult = msg.payload;\nvar uid = msg.uid;\n\n// Check if the query result array is not empty\nif (queryResult.length > 0) {\n    // Student is currently parked, delete the entry\n    var deleteQuery = \"DELETE FROM CurrentlyParked WHERE student_id = '\" + uid + \"'\";\n    msg.topic = deleteQuery;\n} else {\n    // Student is not currently parked, insert a new entry\n    var insertQuery = \"INSERT INTO CurrentlyParked (student_id, parked_time, parking_location) VALUES ('\" + uid + \"', NOW(), 'E1')\";\n    msg.topic = insertQuery;\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 280,
+        "wires": [
+            [
+                "6911d1d0d516c06e",
+                "9bcc207b2a9d6a34"
+            ]
+        ]
+    },
+    {
+        "id": "9bcc207b2a9d6a34",
+        "type": "mysql",
+        "z": "301632ec8418a0cc",
+        "mydb": "610a1db65fbea409",
+        "name": "",
+        "x": 710,
+        "y": 280,
+        "wires": [
+            [
+                "57077efc52e2c43b"
+            ]
+        ]
+    },
+    {
+        "id": "70131733cf5f0fab",
+        "type": "mysql",
+        "z": "301632ec8418a0cc",
+        "mydb": "610a1db65fbea409",
+        "name": "",
+        "x": 810,
+        "y": 440,
+        "wires": [
+            [
+                "d56759cd24eb50c1"
+            ]
+        ]
+    },
+    {
+        "id": "d56759cd24eb50c1",
+        "type": "ui_template",
+        "z": "301632ec8418a0cc",
+        "group": "74e81e1a9d8877be",
+        "name": "Parking Table",
+        "order": 0,
+        "width": "20",
+        "height": "20",
+        "format": "<style>\n    /* Your existing styles */\n    table {\n        margin: auto;\n        border-collapse: collapse;\n        width: 100%;\n        text-align: center;\n    }\n\n    thead {\n        background-color: #f2f2f2;\n        position: sticky;\n        top: 0;\n        height: 50px;\n        /* Set a fixed height for the thead */\n    }\n\n    th {\n        padding: 10px;\n        font-weight: bold;\n        color: blue;\n    }\n\n    tbody {\n        border-bottom: 1px solid #ddd;\n        height: 300px;\n        /* Set a fixed height for the tbody */\n        overflow-y: auto;\n        /* Make the tbody scrollable */\n    }\n\n    td {\n        padding: 10px;\n    }\n\n    /* New styles for the counter */\n    .counter {\n        text-align: center;\n        font-size: 5vw;\n        max-height: 100px;\n        color: red;\n        font-weight: bold;\n        margin-bottom: 10px;\n    }\n</style>\n\n<div class=\"counter\">\n    Total Entries: {{ msg.payload.length }}\n</div>\n\n<table>\n    <thead>\n        <tr>\n            <th>Student ID</th>\n            <th>First Name</th>\n            <th>Last Name</th>\n            <th>Parked Time</th>\n            <th>Parking Location</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr ng-repeat=\"record in msg.payload\">\n            <td>{{ record.student_id }}</td>\n            <td>{{ record.first_name }}</td>\n            <td>{{ record.last_name }}</td>\n            <td>{{ record.parked_time }}</td>\n            <td>{{ record.parking_location }}</td>\n        </tr>\n    </tbody>\n</table>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "x": 700,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fa865e6f44116cfd",
+        "type": "debug",
+        "z": "301632ec8418a0cc",
+        "name": "Show DB",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 410,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "57077efc52e2c43b",
+        "type": "function",
+        "z": "301632ec8418a0cc",
+        "name": "update_interface",
+        "func": "var query = `\n    SELECT\n        Students.student_id,\n        Students.first_name,\n        Students.last_name,\n        CurrentlyParked.parked_time,\n        CurrentlyParked.parking_location\n    FROM\n        Students\n    JOIN\n        CurrentlyParked ON Students.student_id = CurrentlyParked.student_id\n`;\n\nmsg.topic = query\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 440,
+        "wires": [
+            [
+                "70131733cf5f0fab"
+            ]
+        ]
+    },
+    {
+        "id": "610a1db65fbea409",
+        "type": "MySQLdatabase",
+        "name": "parking_db",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "parking_db",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "c231287c7e8da1f7",
+        "type": "mqtt-broker",
+        "name": "HiveMQ",
+        "broker": "broker.mqtt-dashboard.com",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "74e81e1a9d8877be",
+        "type": "ui_group",
+        "name": "Parking Monitoring System",
+        "tab": "67b332227a55b736",
+        "order": 1,
+        "disp": true,
+        "width": "20",
+        "collapse": false
+    },
+    {
+        "id": "67b332227a55b736",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
